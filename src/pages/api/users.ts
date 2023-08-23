@@ -1,4 +1,6 @@
+import { Collection, MongoClient } from "mongodb";
 import clientPromise from "../../../lib/mongodb";
+import { User } from "../../models/user.interface";
 
 export default async (req: any, res: any) => {
    try {
@@ -6,31 +8,36 @@ export default async (req: any, res: any) => {
        const db = client.db("gamble");
        const collection = db.collection('users');
 
-       const documentToInsert = {
-        key1: 'value1',
-        key2: 'value2',
-      };
+       if (req.method === 'POST') {
+        const userInput: User = {
+            name: req.body?.name,
+            budget: 100
+        }; 
 
-       const users = await db
+        const user = await db
            .collection("users")
-           .find({})
-           .limit(10)
+           .find({name: userInput?.name})
            .toArray();
 
-           collection.insertOne(documentToInsert)
-           .then((result) => {
-             console.log('Document inserted successfully:', result.insertedId);
-           })
-           .catch((err) => {
-             console.error('Error inserting document:', err);
-           })
-           .finally(() => {
-             // Close the connection when done
-             client.close();
-           });
-
-       res.json(users);
+           if(!user.length) {
+        		insertNewUser(collection, userInput);
+           }
+            
+		   res.status(201).json(user);
+      } else {
+       	   res.status(405).end(); 
+      }
    } catch (e) {
        console.error(e);
    }
 };
+
+const insertNewUser = (collection: Collection, userData: User) => {
+    collection.insertOne(userData)
+    .then((result) => {
+        console.log('User inserted successfully:', result.insertedId);
+    })
+    .catch((err) => {
+        console.error('Error inserting user:', err);
+    })
+}

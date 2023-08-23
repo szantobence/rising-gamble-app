@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import Layout from "../layouts/layout";
 import '../app/globals.css'
+import GambleGameContext from "../store/gamble-game-context";
 
 export default function Game() {
 
@@ -8,17 +9,21 @@ export default function Game() {
   const [number, setNumber] = useState<number>();
   const [isGameActive, setIsGameActive] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/users')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        setUsers(data)
-      });
-  }, []);
+  const ctx = useContext(GambleGameContext);
+
+  // useEffect(() => {
+  //   fetch('/api/users')
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       console.log(data);
+  //       setUsers(data)
+  //     });
+  // }, []);
 
   const startGame = () => {
     const numbers: any = [];
+
+    console.log(ctx);
 
     setIsGameActive(true);
     
