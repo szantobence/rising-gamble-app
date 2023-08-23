@@ -1,64 +1,115 @@
-import { useEffect, useState, useContext } from "react";
-import Layout from "../layouts/layout";
-import '../app/globals.css'
-import GambleGameContext from "../store/gamble-game-context";
+import React, { useEffect, useState } from 'react';
+import Layout from '../layouts/layout';
+import { useRouter } from 'next/router';
+import { User } from '../models/user.interface';
 
-export default function Game() {
+const Game = () => {
+  const [money, setMoney] = useState(0);
+  const [bet, setBet] = useState(10);
+  const [result, setResult] = useState('');
+  const [isRolling, setIsRolling] = useState(false);
 
-  const [users, setUsers] = useState(null);
-  const [number, setNumber] = useState<number>();
-  const [isGameActive, setIsGameActive] = useState(false);
+  const router = useRouter();
+  const queryData = router.query;
 
-  const ctx = useContext(GambleGameContext);
+  useEffect(() => {
+    fetch(`/api/game?user=${queryData.user}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setMoney(data[0].budget)
+      });
+  }, []);
 
-  // useEffect(() => {
-  //   fetch('/api/users')
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       console.log(data);
-  //       setUsers(data)
-  //     });
-  // }, []);
+  useEffect(() => {
+    const updatedBudgetForUser: User = {
+      name: queryData?.user,
+      budget: money,
+    };
 
-  const startGame = () => {
-    const numbers: any = [];
+    fetch('/api/updateUserBudget', {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedBudgetForUser),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }, [money]);
 
-    console.log(ctx);
-
-    setIsGameActive(true);
-    
-    const interval = setInterval(() => {
-      const randomNumber = Math.floor(Math.random() * 100) + 1;
-      numbers.push(randomNumber);
-      setNumber(randomNumber);
-      console.log('Generated number:', randomNumber);
-    }, 500);
-  
-    setTimeout(() => {
-      clearInterval(interval);
-      setIsGameActive(false);
-      const lastGeneratedNumber = numbers[numbers.length - 1];
-      console.log('The last generated number was:', lastGeneratedNumber);
-    }, 5000);
+  const handleBetChange = (e: any) => {
+    const newBet = parseInt(e.target.value, 10);
+    if (!isNaN(newBet) && newBet >= 0 && newBet <= money) {
+      setBet(newBet);
+    }
   };
-  
+
+  const rollWheel = () => {
+    if (isRolling) return;
+
+    if (bet <= 0 || bet > money) {
+      return;
+    }
+
+    setIsRolling(true);
+
+    const randomResult = Math.floor(Math.random() * 3) + 1;
+
+    setTimeout(() => {
+      setIsRolling(false);
+
+      if (randomResult === 1) {
+        setMoney(money + bet);
+        setResult('Double');
+      } else if (randomResult === 2) {
+        setResult('Keep');
+      } else {
+        setMoney(money - bet);
+        setResult('Bankrupt!');
+      }
+
+    }, 1000);
+  };
+
   return (
     <Layout>
-      <div className="flex justify-center items-center mt-32">
-        <div className="max-w-md rounded-lg p-4 bg-white min-h-container backdrop-blur-lg">
-          <h5 className="text-space-blue font-body-bold">Gamble game</h5>
-            <button
-              onClick={startGame}
-              className={`w-full mt-2 p-2 bg-blue-500 text-white rounded-md ${isGameActive ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-600'}`}
-              disabled={isGameActive}
-            >
-              Rolling the wheel
-            </button>
-            <div className="flex justify-center items-center">
-              <span className="text-2xl">{number}</span>
-            </div>
+      <div className="flex flex-col items-center mt-8">
+        <h1 className="text-3xl font-semibold mb-4">Gamble Game</h1>
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <p className="text-xl mb-4">Current Money: ${money}</p>
+          <div className="mb-4">
+            <label htmlFor="betAmount" className="block text-lg font-semibold mb-2">
+              Bet Amount:
+            </label>
+            <input
+              type="number"
+              id="betAmount"
+              className="w-full p-2 border rounded-md"
+              value={bet}
+              onChange={handleBetChange}
+              disabled={isRolling}
+            />
+          </div>
+          <button
+            className={`w-full p-3 rounded-md ${
+              isRolling ? 'cursor-not-allowed opacity-50' : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+            onClick={rollWheel}
+            disabled={isRolling}
+          >
+            {isRolling ? 'Rolling...' : 'Roll the Wheel'}
+          </button>
+          {result && <p className="mt-4 text-lg font-semibold text-center">{result}</p>}
         </div>
       </div>
     </Layout>
   );
-}
+};
+
+export default Game;

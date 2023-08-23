@@ -26,8 +26,7 @@ export default function Home({ children }: any) {
       body: JSON.stringify(inputValue)
       }).then((response) => response.json())
       .then((data) => {
-        console.log(data);
-        router.push('/game');
+        router.push(`/game?user=${inputValue?.name}`);
       }).catch((error) => {
         console.error('Error:', error);
       });
