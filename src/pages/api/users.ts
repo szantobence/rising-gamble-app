@@ -20,7 +20,7 @@ export default async (req: any, res: any) => {
 				.toArray();
 
 			if (!user.length) {
-				insertNewUser(collection, userInput);
+			 	insertNewUser(collection, userInput);
 			}
 
 			res.status(201).json(user);
@@ -34,12 +34,12 @@ export default async (req: any, res: any) => {
 	}
 };
 
-const insertNewUser = (collection: Collection, userData: User) => {
+const insertNewUser =  (collection: Collection, userData: User) => {
 	collection.insertOne(userData)
-		.then((result) => {
-			console.log('User inserted successfully:', result.insertedId);
-		})
-		.catch((err) => {
-			console.error('Error inserting user:', err);
-		})
+	.then((result) => {
+		console.log('User inserted successfully:', result.insertedId);
+	})
+	.catch((err) => {
+		console.error('Error inserting user:', err);
+	})
 }

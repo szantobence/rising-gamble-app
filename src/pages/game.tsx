@@ -29,20 +29,22 @@ const Game = () => {
 			budget: money,
 		};
 
-		fetch('/api/updateUserBudget', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(updatedBudgetForUser),
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				console.log(data);
+		if(result !== '') {
+			fetch('/api/updateUserBudget', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(updatedBudgetForUser),
 			})
-			.catch((error) => {
-				console.error('Error:', error);
-			});
+				.then((response) => response.json())
+				.then((data) => {
+					console.log(data);
+				})
+				.catch((error) => {
+					console.error('Error:', error);
+				});
+		}
 	}, [money]);
 
 	const handleBetChange = (e: any) => {
